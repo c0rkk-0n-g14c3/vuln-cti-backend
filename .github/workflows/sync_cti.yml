@@ -1,0 +1,38 @@
+name: Sync CISA Vulnrichment to Gist
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # 15分おきに自動実行
+  workflow_dispatch:
+    inputs:
+      mock_alert:
+        description: "LTデモ用：強制Criticalアラートを発火させる"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run CTI Fetcher
+        env:
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          if [ "${{ inputs.mock_alert }}" = "true" ]; then
+            python fetch_vuln.py --mock-alert
+          else
+            python fetch_vuln.py
+          fi
